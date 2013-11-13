@@ -2,7 +2,7 @@
 
 #db = DAL('sqlite://storage.sqlite')
 #db = DAL('postgres://Hugo:Satriani@localhost/db')
-db = DAL('postgres://postgres:Satriani@localhost/test')
+db = DAL('postgres://postgres:Satriani@localhost/where4now')
 
 from gluon.tools import *
 auth = Auth(db)
@@ -25,8 +25,8 @@ db.define_table('operator',
     Field('email'),
     Field('website'),
     Field('gpscoord', unique=True),
-    Field('segments'),
-    Field('regions'),
+    Field('tourism_segments', 'list:string'),
+    Field('regions', 'list:string'),
     format='%(name)s')
 
 db.operator.name.requires = IS_NOT_IN_DB(db, db.operator.name)
@@ -39,6 +39,25 @@ db.operator.nib.requires  = IS_NOT_IN_DB(db, db.operator.nib)
 db.operator.nib.requires  = IS_NOT_EMPTY()
 db.operator.gpscoord.requires  = IS_NOT_IN_DB(db, db.operator.gpscoord)
 db.operator.email.requires = IS_EMAIL()
+db.operator.tourism_segments.requires = IS_IN_SET(('Cultural and Landscape',
+                                                   'City Break',
+                                                   'Nature',
+                                                   'Nautical',
+                                                   'Golf',
+                                                   'Gastronomy and Whine',
+                                                   'Integrated Resorts',
+                                                   'Residential',
+                                                   'Health and Wellbeing',
+                                                   'Sun and Sea',
+                                                   'Business'))
+db.operator.regions.requires = IS_IN_SET(('Algarve',
+                                          'Alentejo',
+                                          'Madeira',
+                                          'Azores',
+                                          'Lisboa',
+                                          'Porto',
+                                          'Center',
+                                          'North'))
 
 #
 # People of contact for a given touristic operator
@@ -73,14 +92,26 @@ db.define_table('service',
     Field('closing_time', 'time'),
     Field('start_time', 'datetime'),
     Field('duration', 'time'),
-    Field('mean_appreciation'),
+    Field('mean_raing'),
     Field('gpscoord', unique=True),
-    Field('segments'),
+    Field('tourism_segments', 'list:string'),
     Field('region'),
     format='%(name)s')
     
 db.service.operator_id.requires = IS_IN_DB(db, db.operator.id)
+db.cust_comment.mean_raing.requires = IS_FLOAT_IN_RANGE(1, 5)
 db.service.gpscoord.requires = IS_NOT_IN_DB(db, db.service.gpscoord)
+db.service.tourism_segments.requires = IS_IN_SET(('Cultural and Landscape',
+                                                  'City Break',
+                                                  'Nature',
+                                                  'Nautical',
+                                                  'Golf',
+                                                  'Gastronomy and Whine',
+                                                  'Integrated Resorts',
+                                                  'Residential',
+                                                  'Health and Wellbeing',
+                                                  'Sun and Sea',
+                                                  'Business'))
 db.service.operator_id.writable = db.service.operator_id.readable = False   
 
 #
@@ -112,7 +143,8 @@ db.photo.service_id.writable = db.photo.service_id.readable = False
 db.define_table('cust_comment',
     Field('service_id', 'reference service'),
     Field('comment', 'text'),
-    Field('appreciation'))
+    Field('rating'))
     
+db.cust_comment.rating.requires = IS_INT_IN_RANGE(1, 5)
 db.cust_comment.service_id.requires = IS_IN_DB(db, db.service.id)
 db.cust_comment.service_id.writable = db.cust_comment.service_id.readable = False
