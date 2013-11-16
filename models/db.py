@@ -1,27 +1,30 @@
 # -*- coding: utf-8 -*-
 
-#db = DAL('sqlite://storage.sqlite')
+db = DAL('sqlite://storage.sqlite')
 #db = DAL('postgres://Hugo:Satriani@localhost/db')
-db = DAL('postgres://postgres:Satriani@localhost/where4now')
+#db = DAL('postgres://postgres:Satriani@localhost:5432/where4now')
 
 from gluon.tools import *
-auth = Auth(db)
-auth.define_tables()
-crud = Crud(db)
+#auth = Auth(db)
+#auth.define_tables()
+#crud = Crud(db)
 
-#
+#------------------------------------------------------------
 # Table that defines a touristic operator
 # - GPS coordinates of the building, operator code, NIF and
 #   NIB shopuld be unique
 # - segments : Tourism segments of operation (list)
 # - regions  : Regions of operation (list)
-#
+#------------------------------------------------------------
 db.define_table('operator',
     Field('name'),
-    Field('code', unique=True),
-    Field('nif', unique=True),
-    Field('nib', unique=True),
-    Field('address', 'text'),
+    Field('code', 'integer'),
+    Field('nif', 'integer'),
+    Field('nib', 'integer'),
+    Field('address'),
+    Field('postal_code'),
+    Field('town'),
+    Field('country', 'string'),
     Field('email'),
     Field('website'),
     Field('gpscoord', unique=True),
@@ -29,16 +32,12 @@ db.define_table('operator',
     Field('regions', 'list:string'),
     format='%(name)s')
 
-db.operator.name.requires = IS_NOT_IN_DB(db, db.operator.name)
-db.operator.name.requires = IS_NOT_EMPTY()
-db.operator.code.requires = IS_NOT_IN_DB(db, db.operator.code)
-db.operator.code.requires = IS_NOT_EMPTY()
-db.operator.nif.requires  = IS_NOT_IN_DB(db, db.operator.nif)
-db.operator.nif.requires  = IS_NOT_EMPTY()
-db.operator.nib.requires  = IS_NOT_IN_DB(db, db.operator.nib)
-db.operator.nib.requires  = IS_NOT_EMPTY()
-db.operator.gpscoord.requires  = IS_NOT_IN_DB(db, db.operator.gpscoord)
+db.operator.name.requires = IS_NOT_IN_DB(db, 'operator.name')
+db.operator.code.requires = IS_NOT_IN_DB(db, 'operator.code')
+db.operator.nif.requires  = IS_NOT_IN_DB(db, 'operator.nif')
+db.operator.nib.requires  = IS_NOT_IN_DB(db, 'operator.nib')
 db.operator.email.requires = IS_EMAIL()
+db.operator.country.requires = IS_IN_SET(('Portugal', 'Spain'))
 db.operator.tourism_segments.requires = IS_IN_SET(('Cultural and Landscape',
                                                    'City Break',
                                                    'Nature',
@@ -59,9 +58,9 @@ db.operator.regions.requires = IS_IN_SET(('Algarve',
                                           'Center',
                                           'North'))
 
-#
+#--------------------------------------------------------
 # People of contact for a given touristic operator
-#    
+#--------------------------------------------------------
 db.define_table('contact',
     Field('operator_id', 'reference operator'),
     Field('name'),
@@ -77,9 +76,9 @@ db.contact.name.requires = IS_NOT_EMPTY()
 db.contact.email.requires = IS_EMAIL()
 db.contact.operator_id.writable = db.contact.operator_id.readable = False
 
-#
+#---------------------------------------------------------
 # Services available for a given touristic operator
-#    
+#---------------------------------------------------------
 db.define_table('service',
     Field('operator_id', 'reference operator'),
     Field('name'),
@@ -92,31 +91,31 @@ db.define_table('service',
     Field('closing_time', 'time'),
     Field('start_time', 'datetime'),
     Field('duration', 'time'),
-    Field('mean_raing'),
+    Field('mean_rating'),
     Field('gpscoord', unique=True),
-    Field('tourism_segments', 'list:string'),
+#    Field('tourism_segments', 'list:string'),
     Field('region'),
     format='%(name)s')
     
 db.service.operator_id.requires = IS_IN_DB(db, db.operator.id)
-db.cust_comment.mean_raing.requires = IS_FLOAT_IN_RANGE(1, 5)
+db.service.mean_rating.requires = IS_FLOAT_IN_RANGE(1, 5)
 db.service.gpscoord.requires = IS_NOT_IN_DB(db, db.service.gpscoord)
-db.service.tourism_segments.requires = IS_IN_SET(('Cultural and Landscape',
-                                                  'City Break',
-                                                  'Nature',
-                                                  'Nautical',
-                                                  'Golf',
-                                                  'Gastronomy and Whine',
-                                                  'Integrated Resorts',
-                                                  'Residential',
-                                                  'Health and Wellbeing',
-                                                  'Sun and Sea',
-                                                  'Business'))
+#db.service.tourism_segments.requires = IS_IN_SET(('Cultural and Landscape',
+#                                                  'City Break',
+#                                                  'Nature',
+#                                                  'Nautical',
+#                                                  'Golf',
+#                                                  'Gastronomy and Whine',
+#                                                  'Integrated Resorts',
+#                                                  'Residential',
+#                                                  'Health and Wellbeing',
+#                                                  'Sun and Sea',
+#                                                  'Business'))
 db.service.operator_id.writable = db.service.operator_id.readable = False   
 
-#
+#-------------------------------------------------------------
 # Service extensions for a given touristic service
-#    
+#-------------------------------------------------------------
 db.define_table('service_extension',
     Field('service_id', 'reference service'),
     Field('name'),
