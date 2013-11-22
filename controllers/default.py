@@ -24,7 +24,88 @@ def create_operator():
     
 def show_operator():
     """
-    This action shows a tourism operator.
+    This action shows a tourism operator and its contacts.
     """
     this_operator = db.operator(request.args(0,cast=int)) or redirect(URL(index))
-    return dict(operator=this_operator)
+    db.contact.operator_id.default = this_operator.id
+    operator_contacts = db(db.contact.operator_id==this_operator.id).select()
+    return dict(operator=this_operator, contacts=operator_contacts)
+    
+###########################################################################################    
+def create_contact():
+    """
+    This action creates an tourism operator's contact in the database.
+    It creates a form with the fields corresponding to a table row.
+    """
+    this_operator = db.operator(request.args(0,cast=int)) or redirect(URL(index))
+    db.contact.operator_id.default = this_operator.id
+    form = SQLFORM(db.contact).process(next=URL('show_operator', args=this_operator.id))
+    return dict(form=form, operator=this_operator)
+    
+def show_contact():
+    """
+    This action shows a tourism operator contact details.
+    """
+    this_contact = db.contact(request.args(0,cast=int)) or redirect(URL(index))
+    return dict(contact=this_contact)
+
+###########################################################################################        
+def create_service():
+    """
+    This action creates an tourism operator's service in the database.
+    It creates a form with the fields corresponding to a table row.
+    """
+    this_operator = db.operator(request.args(0,cast=int)) or redirect(URL(index))
+    db.service.operator_id.default = this_operator.id
+    form = SQLFORM(db.service).process(next=URL('show_operator', args=this_operator.id))
+    return dict(form=form, operator=this_operator)
+    
+def show_services():
+    """
+    This action lists all the services available for a tourism operator.
+    It orders them by service name.
+    """
+    this_operator = db.operator(request.args(0,cast=int)) or redirect(URL(index))
+    services = db(db.service.operator_id==this_operator.id).select(db.service.id, db.service.name, orderby=db.service.name)
+    return dict(services=services, operator=this_operator)
+    
+def show_service():
+    """
+    This action shows a tourism service details.
+    """
+    this_service = db.service(request.args(0,cast=int)) or redirect(URL(index))
+    db.service_extension.service_id.default = this_service.id
+    service_extensions = db(db.service_extension.service_id==this_service.id).select()
+    photos = db(db.photo.service_id==this_service.id).select()
+    comments = db(db.cust_comment.service_id==this_service.id).select()
+    db.cust_comment.service_id.default = this_service.id
+    form = SQLFORM(db.cust_comment).process(next=URL('show_service', args=this_service.id))
+    return dict(service=this_service, extensions=service_extensions, photos=photos, comments=comments, form=form)
+
+###########################################################################################
+def create_service_extension():
+    """
+    This action creates an extension to a  tourism operator's service in the database.
+    It creates a form with the fields corresponding to a table row.
+    """
+    this_service = db.service(request.args(0,cast=int)) or redirect(URL(index))
+    db.service_extension.service_id.default = this_service.id
+    form = SQLFORM(db.service_extension).process(next=URL('show_service', args=this_service.id))
+    return dict(form=form, service=this_service)
+
+
+###########################################################################################
+def upload_photo():
+    """
+    This action adds a photo to the database and assigns it to a Service.
+    """
+    this_service = db.service(request.args(0,cast=int)) or redirect(URL(index))
+    db.photo.service_id.default = this_service.id
+    form = SQLFORM(db.photo).process(next=URL('show_service', args=this_service.id))
+    return dict(form=form, service=this_service)
+    
+def download_photo():
+    """
+    This action downloads a photo to be shown on screen.
+    """
+    return response.download(request, db)

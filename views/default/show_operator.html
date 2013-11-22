@@ -1,6 +1,7 @@
 {{extend 'layout.html'}}
 [ {{=A('Show all operators', _href=URL('index'))}} ]
 [ {{=A('Create new operator', _href=URL('create_operator'))}} ]<br />
+[ {{=A('Create new service for this operator', _href=URL('create_service', args=operator.id))}} ]<br />
 <h1>{{=operator.name}}</h1>
 <a>Address: </a>{{=operator.address}}<br />
 {{=operator.postal_code}}<br />
@@ -19,3 +20,17 @@
 {{for region in operator.regions:}}
 	{{=region}}
 {{pass}}<br />
+<br />
+[ {{=A('Show all services for this operator', _href=URL('show_services', args=operator.id))}} ]<br />
+
+{{if contacts:}}
+	{{=H2('Contacts for this Operator')}}
+	{{for contact in contacts:}}
+		{{=H4(contact.name + ' ' + contact.surname, _href=URL('show_contact', args=contact.id))}}
+		{{=contact.professional_position}}<br />
+		[ {{=A('Complete contact data', _href=URL('show_contact', args=contact.id))}} ]
+	{{pass}}<br />
+{{else:}}
+	{{=H3('No contacts created for this Operator')}}
+{{pass}}<br />
+[ {{=A('Create new contact', _href=URL('create_contact', args=operator.id))}} ]<br />
