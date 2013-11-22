@@ -31,7 +31,11 @@ def show_operator():
     operator_contacts = db(db.contact.operator_id==this_operator.id).select()
     return dict(operator=this_operator, contacts=operator_contacts)
     
-###########################################################################################    
+###########################################################################################
+def contact_form_processing(form):
+    if (not form.vars.name and not form.vars.surname):
+        form.errors.surname = 'name or surname cannot be empty'
+
 def create_contact():
     """
     This action creates an tourism operator's contact in the database.
@@ -39,7 +43,9 @@ def create_contact():
     """
     this_operator = db.operator(request.args(0,cast=int)) or redirect(URL(index))
     db.contact.operator_id.default = this_operator.id
-    form = SQLFORM(db.contact).process(next=URL('show_operator', args=this_operator.id))
+    form = SQLFORM(db.contact)
+    if form.process(onvalidation=contact_form_processing).accepted:
+        redirect(URL('show_operator', args=this_operator.id))
     return dict(form=form, operator=this_operator)
     
 def show_contact():
